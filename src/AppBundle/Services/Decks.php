@@ -2,6 +2,8 @@
 
 namespace AppBundle\Services;
 
+use AppBundle\Entity\Decklist;
+use AppBundle\Entity\Card;
 use AppBundle\Entity\Deck;
 use Doctrine\ORM\EntityManagerInterface;
 use AppBundle\Entity\Deckslot;
@@ -239,7 +241,7 @@ class Decks {
 
         if ($decklist_id) {
             /* @var $decklist \AppBundle\Entity\Decklist */
-            $decklist = $this->doctrine->getRepository('AppBundle:Decklist')->find($decklist_id);
+            $decklist = $this->doctrine->getRepository(Decklist::class)->find($decklist_id);
             if ($decklist) {
                 $deck->setParent($decklist);
             }
@@ -256,7 +258,7 @@ class Decks {
         $spheres = [];
 
         foreach ($content['main'] as $card_code => $qty) {
-            $card = $this->doctrine->getRepository('AppBundle:Card')->findOneBy([
+            $card = $this->doctrine->getRepository(Card::class)->findOneBy([
                 "code" => $card_code
             ]);
 
@@ -297,7 +299,7 @@ class Decks {
         }
 
         foreach ($content['side'] as $card_code => $qty) {
-            $card = $this->doctrine->getRepository('AppBundle:Card')->findOneBy([
+            $card = $this->doctrine->getRepository(Card::class)->findOneBy([
                 "code" => $card_code
             ]);
 
@@ -412,7 +414,7 @@ class Decks {
         $latestPack = null;
 
         foreach ($content['main'] as $card_code => $qty) {
-            $card = $this->doctrine->getRepository('AppBundle:Card')->findOneBy([
+            $card = $this->doctrine->getRepository(Card::class)->findOneBy([
                 "code" => $card_code
             ]);
 
@@ -432,7 +434,7 @@ class Decks {
         }
 
         foreach ($content['side'] as $card_code => $qty) {
-            $card = $this->doctrine->getRepository('AppBundle:Card')->findOneBy([
+            $card = $this->doctrine->getRepository(Card::class)->findOneBy([
                 "code" => $card_code
             ]);
 
@@ -504,7 +506,7 @@ class Decks {
      * @return array
      */
     public function getUnsavedChanges($deck) {
-        return $this->doctrine->getRepository('AppBundle:Deckchange')->findBy([
+        return $this->doctrine->getRepository(Deckchange::class)->findBy([
             'deck' => $deck,
             'isSaved' => false
         ]);
