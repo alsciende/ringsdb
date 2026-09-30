@@ -464,6 +464,10 @@ class Decks {
         }
 
         foreach ($content['main'] as $card_code => $qty) {
+            // a card missing from the database (skipped above)
+            if (!isset($cards[$card_code])) {
+                continue;
+            }
             $card = $cards[$card_code];
             $slot = new Deckslot();
             $slot->setQuantity($qty);
@@ -473,6 +477,10 @@ class Decks {
         }
 
         foreach ($content['side'] as $card_code => $qty) {
+            // a card missing from the database (skipped above)
+            if (!isset($cards[$card_code])) {
+                continue;
+            }
             $card = $cards[$card_code];
             $slot = new Decksideslot();
             $slot->setQuantity($qty);
