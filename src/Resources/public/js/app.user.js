@@ -13,7 +13,7 @@
      * @memberOf user
      */
     user.query = function query() {
-        $.ajax(Routing.generate('user_info', user.params), {
+        $.ajax(Routing.generate('api_private_user_info', user.params), {
             cache: false,
             dataType: 'json',
             success: function(data, textStatus, jqXHR) {
@@ -25,7 +25,9 @@
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.log('[' + moment().format('YYYY-MM-DD HH:mm:ss') + '] Error on ' + this.url, textStatus, errorThrown);
+                if (errorThrown !== 'Forbidden') {
+                    console.log('[' + moment().format('YYYY-MM-DD HH:mm:ss') + '] Error on ' + this.url, textStatus, errorThrown);
+                }
                 user.loaded.reject();
             }
         });
