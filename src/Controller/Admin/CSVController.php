@@ -7,6 +7,8 @@ namespace App\Controller\Admin;
 use App\Entity\Card;
 use App\Entity\CardPrinting;
 use App\Entity\Pack;
+use App\Entity\Sphere;
+use App\Entity\Type;
 use App\Repository\CardPrintingRepository;
 use App\Repository\CardRepository;
 use App\Repository\CycleRepository;
@@ -175,16 +177,16 @@ class CSVController extends AbstractController
                 if (array_key_exists($colName, $cardAssocMappings)) {
                     // Association field on Card (type, sphere).
                     $associationMapping = $cardAssocMappings[$colName];
-                    /** @var class-string<\App\Entity\Type|\App\Entity\Sphere> $targetEntity */
+                    /** @var class-string<Type|Sphere> $targetEntity */
                     $targetEntity = $associationMapping['targetEntity'];
                     $associationRepository = $em->getRepository($targetEntity);
-                    /** @var \App\Entity\Type|\App\Entity\Sphere|null $associationEntity */
+                    /** @var Type|Sphere|null $associationEntity */
                     $associationEntity = $associationRepository->findOneBy(['name' => $value]);
                     if (!$associationEntity) {
                         if ('type' == $colName && 'Other' == $value) {
                             // legacy code
                             $value = 'Contract';
-                            /** @var \App\Entity\Type|null $associationEntity */
+                            /** @var Type|null $associationEntity */
                             $associationEntity = $associationRepository->findOneBy(['name' => $value]);
                             if (!$associationEntity) {
                                 throw new \Exception("cannot find entity [{$colName}] of name [{$value}]");
