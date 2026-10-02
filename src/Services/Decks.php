@@ -68,7 +68,7 @@ class Decks
     /**
      * @return array<int, mixed>
      */
-    public function getByUser($user)
+    public function getByUser($user): array
     {
         /* @var $user \App\Entity\User */
         $decks = $user->getDecks();
@@ -84,7 +84,7 @@ class Decks
     /**
      * @return list<array<string, mixed>>
      */
-    public function getDecksWithSlotsForUser($user, $limit = null)
+    public function getDecksWithSlotsForUser($user, $limit = null): array
     {
         // Step 1: get the right deck IDs with no collection join so LIMIT works correctly
         $idQuery = $this->doctrine->createQuery(
@@ -184,20 +184,14 @@ class Decks
         return array_values($decks);
     }
 
-    /**
-     * @return int
-     */
-    public function countDecksForUser($user)
+    public function countDecksForUser($user): int
     {
         return (int) $this->doctrine->createQuery(
             'SELECT COUNT(d.id) FROM App\Entity\Deck d WHERE d.user = :user'
         )->setParameter('user', $user)->getSingleScalarResult();
     }
 
-    /**
-     * @return Deck
-     */
-    public function cloneDeck($deck, $user)
+    public function cloneDeck($deck, $user): Deck
     {
         /* @var $deck \App\Entity\Deck */
         if (!$deck) {
@@ -242,7 +236,7 @@ class Decks
      *
      * @return string[]
      */
-    public function normalizeTags($tags)
+    public function normalizeTags($tags): array
     {
         $tags = preg_split('/\s+/', trim(implode(' ', (array) $tags)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
@@ -519,7 +513,7 @@ class Decks
     /**
      * @return array<int, Deckchange>
      */
-    public function getUnsavedChanges($deck)
+    public function getUnsavedChanges($deck): array
     {
         return $this->deckchangeRepository->findBy([
             'deck' => $deck,
