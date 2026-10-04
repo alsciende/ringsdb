@@ -13,6 +13,7 @@ use App\Repository\CardPrintingRepository;
 use App\Repository\CardRepository;
 use App\Repository\CycleRepository;
 use App\Repository\PackRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,14 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class CSVController extends AbstractController
 {
+    private EntityManagerInterface $entityManager;
+
+    public function __construct(
+        EntityManagerInterface $entityManager
+    ) {
+        $this->entityManager = $entityManager;
+    }
+
     /**
      * @Route("/admin/csv/upload", name="csv_upload_form", methods={"GET"})
      */
@@ -55,7 +64,6 @@ class CSVController extends AbstractController
             $newIds[$card['octgnid']] = 1;
             array_push($cards, $card);
         }
-        $em = $this->getDoctrine()->getManager();
         $packRepo = $packRepository;
         $pack = $packRepo->findOneBy(['code' => $inputCode]);
         $oldPack = $packRepo->findOneBy(['code' => $inputOldCode]);
@@ -73,18 +81,18 @@ class CSVController extends AbstractController
             $pack->setSize(1);
             $pack->setDateRelease(new \DateTime('2030-02-01'));
             $pack->setCycle($cycle);
-            $em->persist($pack);
-            $em->flush();
+            $this->entityManager->persist($pack);
+            $this->entityManager->flush();
         } elseif (!$pack) {
             $pack = $oldPack;
             $pack->setCode($inputCode);
-            $em->persist($pack);
-            $em->flush();
+            $this->entityManager->persist($pack);
+            $this->entityManager->flush();
         }
         if ($pack->getName() != $inputName) {
             $pack->setName($inputName);
-            $em->persist($pack);
-            $em->flush();
+            $this->entityManager->persist($pack);
+            $this->entityManager->flush();
         }
         // Build oldIds from the pack's CardPrintings (not Card rows, since a
         // canonical Card may appear in multiple packs after the refactor).
@@ -110,10 +118,10 @@ class CSVController extends AbstractController
             }
         }
         $printingRepo = $cardPrintingRepository;
-        $cardMeta = $em->getClassMetadata(Card::class);
+        $cardMeta = $this->entityManager->getClassMetadata(Card::class);
         $cardFieldNames = $cardMeta->getFieldNames();
         $cardAssocMappings = $cardMeta->getAssociationMappings();
-        $printingMeta = $em->getClassMetadata(CardPrinting::class);
+        $printingMeta = $this->entityManager->getClassMetadata(CardPrinting::class);
         $printingFieldNames = $printingMeta->getFieldNames();
         foreach ($cards as $card) {
             $changed = false;
@@ -150,7 +158,7 @@ class CSVController extends AbstractController
                     $now = new \DateTime();
                     $cardEntity->setDateCreation($now);
                     $cardEntity->setDateUpdate($now);
-                    $em->persist($cardEntity);
+                    $this->entityManager->persist($cardEntity);
                 }
                 $printingEntity = new CardPrinting();
                 $now = new \DateTime();
@@ -164,7 +172,7 @@ class CSVController extends AbstractController
                 // imageCode is non-nullable; default to the card code and let
                 // the field loop below override it from the CSV column.
                 $printingEntity->setImageCode($card['imageCode'] ?? $card['image_code'] ?? $card['code'] ?? '');
-                $em->persist($printingEntity);
+                $this->entityManager->persist($printingEntity);
                 $changed = true;
             }
             foreach ($card as $colName => $value) {
@@ -179,7 +187,7 @@ class CSVController extends AbstractController
                     $associationMapping = $cardAssocMappings[$colName];
                     /** @var class-string<Type|Sphere> $targetEntity */
                     $targetEntity = $associationMapping['targetEntity'];
-                    $associationRepository = $em->getRepository($targetEntity);
+                    $associationRepository = $this->entityManager->getRepository($targetEntity);
                     /** @var Type|Sphere|null $associationEntity */
                     $associationEntity = $associationRepository->findOneBy(['name' => $value]);
                     if (!$associationEntity) {
@@ -234,11 +242,11 @@ class CSVController extends AbstractController
                 }
             }
             if ($changed) {
-                $em->persist($cardEntity);
-                $em->persist($printingEntity);
+                $this->entityManager->persist($cardEntity);
+                $this->entityManager->persist($printingEntity);
             }
         }
-        $em->flush();
+        $this->entityManager->flush();
 
         return new Response('Done');
     }
