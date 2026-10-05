@@ -11,6 +11,8 @@ use App\Entity\Decklist;
 use App\Entity\Decksideslot;
 use App\Entity\Deckslot;
 use App\Entity\Pack;
+use App\Entity\Sphere;
+use App\Entity\Type;
 use App\Entity\User;
 use App\Helper\DeckValidationHelper;
 use App\Repository\CardRepository;
@@ -257,7 +259,7 @@ class Decks
             }
         }
 
-        $deck->setName($name);
+        $deck->setName($name ?? 'Untitled Deck');
         $deck->setDescriptionMd($description);
         $deck->setUser($user);
         $deck->setMinorVersion($deck->getMinorVersion() + 1);
@@ -276,26 +278,19 @@ class Decks
                 continue;
             }
 
-            /* @var $pack Pack */
             $pack = $card->getPack();
-            if (!$latestPack) {
-                $latestPack = $pack;
-            } else {
-                if (!$latestPack->getDateRelease() && !$pack->getDateRelease()) {
-                    if ($latestPack->getCycle()->getPosition() < $pack->getCycle()->getPosition()) {
-                        $latestPack = $pack;
-                    } else {
-                        if ($latestPack->getCycle()->getPosition() == $pack->getCycle()->getPosition() && $latestPack->getPosition() < $pack->getPosition()) {
-                            $latestPack = $pack;
-                        }
-                    }
-                } elseif (!$pack->getDateRelease() || $latestPack->getDateRelease() < $pack->getDateRelease()) {
+            if ($pack instanceof Pack) {
+                if (!$latestPack) {
+                    $latestPack = $pack;
+                } elseif ($pack->isLaterThan($latestPack)) {
                     $latestPack = $pack;
                 }
             }
 
             $cards[$card_code] = $card;
-            if ('hero' == $card->getType()->getCode()) {
+            if ($card->getType() instanceof Type
+                && $card->getSphere() instanceof Sphere
+                && 'hero' == $card->getType()->getCode()) {
                 $spheres[] = $card->getSphere()->getCode();
             }
 

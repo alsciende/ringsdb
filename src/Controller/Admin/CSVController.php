@@ -99,7 +99,9 @@ class CSVController extends AbstractController
         $oldIds = [];
         foreach ($pack->getPrintings() as $printing) {
             $oldIds[$printing->getOctgnid()] = 1;
-            if (!array_key_exists((string) $printing->getOctgnid(), $newIds) && false === strpos($printing->getCard()->getName(), '[deleted]')) {
+            if ($printing->getCard()
+                && !array_key_exists((string) $printing->getOctgnid(), $newIds)
+                && false === strpos($printing->getCard()->getName() ?? '', '[deleted]')) {
                 $card = $printing->getCard();
                 $card->setName('[deleted] '.$card->getName());
                 $card->setCode($card->getCode().'_'.uniqid());
@@ -110,7 +112,9 @@ class CSVController extends AbstractController
         $motkPack = $packRepo->findOneBy(['code' => 'ALePMotKA']);
         if ($motkPack) {
             foreach ($motkPack->getPrintings() as $printing) {
-                if (array_key_exists((string) $printing->getOctgnid(), $oldIds) && false === strpos($printing->getCard()->getName(), '[deleted]')) {
+                if ($printing->getCard()
+                    && array_key_exists((string) $printing->getOctgnid(), $oldIds)
+                    && false === strpos($printing->getCard()->getName() ?? '', '[deleted]')) {
                     $card = $printing->getCard();
                     $card->setName('[deleted] '.$card->getName());
                     $card->setCode($card->getCode().'_'.uniqid());
@@ -240,10 +244,6 @@ class CSVController extends AbstractController
                         $printingEntity->{$setter}($value);
                     }
                 }
-            }
-            if ($changed) {
-                $this->entityManager->persist($cardEntity);
-                $this->entityManager->persist($printingEntity);
             }
         }
         $this->entityManager->flush();
