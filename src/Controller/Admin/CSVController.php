@@ -48,10 +48,12 @@ class CSVController extends AbstractController
         $inputFileName = $request->files->get('upfile')->getPathname();
         $content = str_replace('﻿', '', trim((string) file_get_contents($inputFileName)));
         $content = str_replace("\r", "\n", str_replace("\n", '<br/>', str_replace("\r\n", "\r", $content)));
+
         $content_array = explode("\n", $content);
         if (count($content_array) < 2) {
             return new Response('No cards found in the CSV file');
         }
+
         $columns = str_getcsv(array_shift($content_array));
         $cards = [];
         $newIds = [];
@@ -61,9 +63,11 @@ class CSVController extends AbstractController
             for ($i = 0; $i < count($row); ++$i) {
                 $card[$columns[$i]] = str_replace('<br/>', "\n", (string) $row[$i]);
             }
+
             $newIds[$card['octgnid']] = 1;
-            array_push($cards, $card);
+            $cards[] = $card;
         }
+
         $packRepo = $packRepository;
         $pack = $packRepo->findOneBy(['code' => $inputCode]);
         $oldPack = $packRepo->findOneBy(['code' => $inputOldCode]);
@@ -74,6 +78,7 @@ class CSVController extends AbstractController
             if (!$cycle) {
                 return new Response('Error: no cycle found to assign to new pack');
             }
+
             $pack = new Pack();
             $pack->setCode($inputCode);
             $pack->setName($inputName);
@@ -89,11 +94,13 @@ class CSVController extends AbstractController
             $this->entityManager->persist($pack);
             $this->entityManager->flush();
         }
+
         if ($pack->getName() != $inputName) {
             $pack->setName($inputName);
             $this->entityManager->persist($pack);
             $this->entityManager->flush();
         }
+
         // Build oldIds from the pack's CardPrintings (not Card rows, since a
         // canonical Card may appear in multiple packs after the refactor).
         $oldIds = [];
@@ -107,6 +114,7 @@ class CSVController extends AbstractController
                 $card->setCode($card->getCode().'_'.uniqid());
             }
         }
+
         // Cards that existed in ALePMotKA and are now being "promoted" into a
         // main pack upload should have the MotKA printing's Card marked deleted.
         $motkPack = $packRepo->findOneBy(['code' => 'ALePMotKA']);
@@ -121,6 +129,7 @@ class CSVController extends AbstractController
                 }
             }
         }
+
         $printingRepo = $cardPrintingRepository;
         $cardMeta = $this->entityManager->getClassMetadata(Card::class);
         $cardFieldNames = $cardMeta->getFieldNames();
@@ -139,6 +148,7 @@ class CSVController extends AbstractController
                     $cardPack = $namedPack;
                 }
             }
+
             // Look up by octgnid scoped to the card's target pack.
             $printingEntity = $printingRepo->findOneBy(['octgnid' => $card['octgnid'], 'pack' => $cardPack]);
             if ($printingEntity) {
@@ -153,10 +163,12 @@ class CSVController extends AbstractController
                         $cardEntity = $motkPrinting->getCard();
                     }
                 }
+
                 if (!$cardEntity) {
                     $cardRepo = $cardRepository;
                     $cardEntity = $cardRepo->findOneBy(['code' => $card['code']]);
                 }
+
                 if (!$cardEntity) {
                     $cardEntity = new Card();
                     $now = new \DateTime();
@@ -164,6 +176,7 @@ class CSVController extends AbstractController
                     $cardEntity->setDateUpdate($now);
                     $this->entityManager->persist($cardEntity);
                 }
+
                 $printingEntity = new CardPrinting();
                 $now = new \DateTime();
                 $printingEntity->setDateCreation($now);
@@ -179,11 +192,13 @@ class CSVController extends AbstractController
                 $this->entityManager->persist($printingEntity);
                 $changed = true;
             }
+
             foreach ($card as $colName => $value) {
                 // octgnid is set on the printing at creation; pack comes from the form.
                 if ('octgnid' === $colName || 'pack' === $colName) {
                     continue;
                 }
+
                 $getter = str_replace(' ', '', ucwords(str_replace('_', ' ', "get_{$colName}")));
                 $setter = str_replace(' ', '', ucwords(str_replace('_', ' ', "set_{$colName}")));
                 if (array_key_exists($colName, $cardAssocMappings)) {
@@ -195,7 +210,7 @@ class CSVController extends AbstractController
                     /** @var Type|Sphere|null $associationEntity */
                     $associationEntity = $associationRepository->findOneBy(['name' => $value]);
                     if (!$associationEntity) {
-                        if ('type' == $colName && 'Other' == $value) {
+                        if ('type' === $colName && 'Other' == $value) {
                             // legacy code
                             $value = 'Contract';
                             /** @var Type|null $associationEntity */
@@ -207,6 +222,7 @@ class CSVController extends AbstractController
                             throw new \Exception("cannot find entity [{$colName}] of name [{$value}]");
                         }
                     }
+
                     if (!$cardEntity->{$getter}() || $cardEntity->{$getter}()->getId() !== $associationEntity->getId()) {
                         $changed = true;
                         $cardEntity->{$setter}($associationEntity);
@@ -220,9 +236,10 @@ class CSVController extends AbstractController
                         $value = null;
                     } elseif ('smallint' === $type && 'X' == $value) {
                         $value = null;
-                    } elseif ('cost' == $colName && '' == $value) {
+                    } elseif ('cost' === $colName && '' == $value) {
                         $value = null;
                     }
+
                     if ($cardEntity->{$getter}() !== $value) {
                         $changed = true;
                         $cardEntity->{$setter}($value);
@@ -236,9 +253,10 @@ class CSVController extends AbstractController
                         $value = null;
                     } elseif ('smallint' === $type && 'X' == $value) {
                         $value = null;
-                    } elseif ('cost' == $colName && '' == $value) {
+                    } elseif ('cost' === $colName && '' == $value) {
                         $value = null;
                     }
+
                     if ($printingEntity->{$getter}() !== $value) {
                         $changed = true;
                         $printingEntity->{$setter}($value);
@@ -246,6 +264,7 @@ class CSVController extends AbstractController
                 }
             }
         }
+
         $this->entityManager->flush();
 
         return new Response('Done');
