@@ -382,10 +382,7 @@ class Decks
 
         foreach ($content['side'] as $card_code => $qty) {
             $card = $cards[$card_code];
-            $slot = new Decksideslot();
-            $slot->setQuantity($qty);
-            $slot->setCard($card);
-            $slot->setDeck($deck);
+            $slot = new Decksideslot($card, $deck, $qty);
             $deck->addSideslot($slot);
         }
 
@@ -463,10 +460,7 @@ class Decks
             }
 
             $card = $cards[$card_code];
-            $slot = new Decksideslot();
-            $slot->setQuantity($qty);
-            $slot->setCard($card);
-            $slot->setDeck($deck);
+            $slot = new Decksideslot($deck, $card, $qty);
             $deck->addSideslot($slot);
         }
     }
