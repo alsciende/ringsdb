@@ -21,12 +21,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class CSVController extends AbstractController
 {
-    private EntityManagerInterface $entityManager;
-
-    public function __construct(
-        EntityManagerInterface $entityManager
-    ) {
-        $this->entityManager = $entityManager;
+    public function __construct(private EntityManagerInterface $entityManager)
+    {
     }
 
     /**
@@ -108,7 +104,7 @@ class CSVController extends AbstractController
             $oldIds[$printing->getOctgnid()] = 1;
             if ($printing->getCard()
                 && !array_key_exists((string) $printing->getOctgnid(), $newIds)
-                && false === strpos($printing->getCard()->getName() ?? '', '[deleted]')) {
+                && !str_contains($printing->getCard()->getName() ?? '', '[deleted]')) {
                 $card = $printing->getCard();
                 $card->setName('[deleted] '.$card->getName());
                 $card->setCode($card->getCode().'_'.uniqid());
@@ -122,7 +118,7 @@ class CSVController extends AbstractController
             foreach ($motkPack->getPrintings() as $printing) {
                 if ($printing->getCard()
                     && array_key_exists((string) $printing->getOctgnid(), $oldIds)
-                    && false === strpos($printing->getCard()->getName() ?? '', '[deleted]')) {
+                    && !str_contains($printing->getCard()->getName() ?? '', '[deleted]')) {
                     $card = $printing->getCard();
                     $card->setName('[deleted] '.$card->getName());
                     $card->setCode($card->getCode().'_'.uniqid());
