@@ -276,7 +276,7 @@ class AdminCsvTest extends WebTestCase
     public function testCsvWithoutCards(): void
     {
         $client = $this->createAdminClient();
-        $file = $this->sampleVariant(fn () => null);
+        $file = $this->sampleVariant(fn (): null => null);
 
         $this->assertSame('No cards found in the CSV file', $this->upload($client, $file, 'THo', 'ALeP - The Hobbit'));
     }
