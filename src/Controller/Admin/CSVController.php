@@ -51,12 +51,12 @@ class CSVController extends AbstractController
             return new Response('No cards found in the CSV file');
         }
 
-        $columns = str_getcsv(array_shift($content_array));
+        $columns = str_getcsv(array_shift($content_array), escape: '\\');
         $cards = [];
         $newIds = [];
         foreach ($content_array as $row) {
             $card = [];
-            $row = str_getcsv($row);
+            $row = str_getcsv($row, escape: '\\');
             for ($i = 0; $i < count($row); ++$i) {
                 $card[$columns[$i]] = str_replace('<br/>', "\n", (string) $row[$i]);
             }
