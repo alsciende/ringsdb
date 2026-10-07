@@ -67,7 +67,7 @@ class CSVController extends AbstractController
         if (!$pack && !$oldPack) {
             $cycleRepo = $cycleRepository;
             // 'ALeP' cycle code doesn't exist; fall back to the most recent cycle.
-            $cycle = $cycleRepo->findOneBy(['code' => 'ALeP']) ?? $cycleRepo->findOneBy([], ['id' => 'DESC']);
+            $cycle = $cycleRepo->findOneBy(['code' => 'ALeP']) ?? $cycleRepo->findOneBy([], ['id' => \SortDirection::Descending]);
             if (!$cycle) {
                 return new Response('Error: no cycle found to assign to new pack');
             }
