@@ -19,7 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class UserInfoController extends AbstractController
 {
@@ -30,9 +30,7 @@ class UserInfoController extends AbstractController
     ) {
     }
 
-    /**
-     * @Route("/api/private/user/info", name="api_private_user_info")
-     */
+    #[Route(path: '/api/private/user/info', name: 'api_private_user_info')]
     public function infoAction(Request $request, CardRepository $cardRepository, DecklistRepository $decklistRepository, FellowshipRepository $fellowshipRepository, QuestlogRepository $questlogRepository): Response
     {
         $jsonp = $request->query->get('jsonp');
