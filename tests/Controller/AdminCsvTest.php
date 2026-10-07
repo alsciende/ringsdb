@@ -241,7 +241,7 @@ class AdminCsvTest extends WebTestCase
 
         $bilbo = $this->fetchPrinting('THo', 'Bilbo Baggins');
         $this->assertSame('[deleted] Bilbo Baggins', $bilbo['name']);
-        $this->assertRegExp('/^503007_\w+$/', $bilbo['code']);
+        $this->assertMatchesRegularExpression('/^503007_\w+$/', $bilbo['code']);
         $this->assertSame('Lucky Number', $this->fetchPrinting('THo', 'Lucky Number')['name']);
     }
 
