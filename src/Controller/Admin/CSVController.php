@@ -67,8 +67,8 @@ class CSVController extends AbstractController
         if (!$pack && !$oldPack) {
             $cycleRepo = $cycleRepository;
             // 'ALeP' cycle code doesn't exist; fall back to the most recent cycle.
-            $cycle = $cycleRepo->findOneBy(['code' => 'ALeP']) ?? $cycleRepo->findOneBy([], ['id' => \SortDirection::Descending]);
-            if (!$cycle) {
+            $cycle = $cycleRepo->findOneBy(['code' => 'ALeP']) ?? $cycleRepo->findOneBy([], ['id' => 'DESC']);
+            if (!$cycle instanceof \App\Entity\Cycle) {
                 return new Response('Error: no cycle found to assign to new pack');
             }
 
@@ -81,7 +81,7 @@ class CSVController extends AbstractController
             $pack->setCycle($cycle);
             $this->entityManager->persist($pack);
             $this->entityManager->flush();
-        } elseif (!$pack) {
+        } elseif (!$pack instanceof Pack) {
             $pack = $oldPack;
             $pack->setCode($inputCode);
             $this->entityManager->persist($pack);
@@ -111,7 +111,7 @@ class CSVController extends AbstractController
         // Cards that existed in ALePMotKA and are now being "promoted" into a
         // main pack upload should have the MotKA printing's Card marked deleted.
         $motkPack = $packRepo->findOneBy(['code' => 'ALePMotKA']);
-        if ($motkPack) {
+        if ($motkPack instanceof Pack) {
             foreach ($motkPack->getPrintings() as $printing) {
                 if ($printing->getCard()
                     && array_key_exists((string) $printing->getOctgnid(), $oldIds)
@@ -137,14 +137,14 @@ class CSVController extends AbstractController
             $cardPack = $pack;
             if (!empty($card['pack']) && $card['pack'] !== $pack->getName()) {
                 $namedPack = $packRepo->findOneBy(['name' => $card['pack']]);
-                if ($namedPack) {
+                if ($namedPack instanceof Pack) {
                     $cardPack = $namedPack;
                 }
             }
 
             // Look up by octgnid scoped to the card's target pack.
             $printingEntity = $printingRepo->findOneBy(['octgnid' => $card['octgnid'], 'pack' => $cardPack]);
-            if ($printingEntity) {
+            if ($printingEntity instanceof CardPrinting) {
                 $cardEntity = $printingEntity->getCard();
             } else {
                 // For cards being promoted from MotKA into a non-MotKA pack,
@@ -152,17 +152,17 @@ class CSVController extends AbstractController
                 $cardEntity = null;
                 if ($motkPack && $cardPack !== $motkPack) {
                     $motkPrinting = $printingRepo->findOneBy(['octgnid' => $card['octgnid'], 'pack' => $motkPack]);
-                    if ($motkPrinting) {
+                    if ($motkPrinting instanceof CardPrinting) {
                         $cardEntity = $motkPrinting->getCard();
                     }
                 }
 
-                if (!$cardEntity) {
+                if (!$cardEntity instanceof Card) {
                     $cardRepo = $cardRepository;
                     $cardEntity = $cardRepo->findOneBy(['code' => $card['code']]);
                 }
 
-                if (!$cardEntity) {
+                if (!$cardEntity instanceof Card) {
                     $cardEntity = new Card();
                     $now = new \DateTime();
                     $cardEntity->setDateCreation($now);
